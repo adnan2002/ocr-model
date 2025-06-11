@@ -56,6 +56,16 @@ const API_BASE_URL = getApiBaseUrl();
     return true;
   };
 
+
+  // const handleCapital = (text)=>{
+  //   const text_arr = text.split(" ");
+  //   const result = text_arr.map((val)=>{
+  //     let temp = val.slice(1, val.length);
+  //     return val.charAt(0).toUpperCase() + temp;
+  //   })
+  //   return result.join(" ")
+  // }
+
   // Process and upload image
   const processImage = async (file) => {
     if (!validateFile(file)) return;
