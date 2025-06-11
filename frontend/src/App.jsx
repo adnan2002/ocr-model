@@ -9,7 +9,17 @@ const App = () => {
   const fileInputRef = useRef(null);
 
   const allowedExtensions = ['jpg', 'jpeg', 'png', 'avif'];
-
+  const getApiBaseUrl = () => {
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost') {
+    // We are on the host computer for development
+    return 'http://localhost:8000';
+  }
+  // We are accessing from another device on the LAN.
+  // Use the computer's IP address (which is the current hostname).
+  return `http://${hostname}:8000`;
+};
+const API_BASE_URL = getApiBaseUrl();
   // Toast management
   const addToast = (message, type = 'error') => {
     const id = Date.now();
@@ -63,7 +73,7 @@ const App = () => {
       const formData = new FormData();
       formData.append('file', file); 
 
-      const response = await fetch('http://localhost:8000/ocr', {
+      const response = await fetch(`${API_BASE_URL}/ocr`, {
         method: 'POST',
         body: formData,
       });
@@ -183,7 +193,7 @@ const App = () => {
               {(uploadedImage || extractedText) && (
                 <button
                   onClick={clearAll}
-                  className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={16} />
                   Clear All
@@ -289,8 +299,13 @@ const App = () => {
                   {extractedText.length} characters extracted
                 </p>
                 <button
-                  onClick={() => navigator.clipboard.writeText(extractedText)}
-                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={() => {
+                    navigator.clipboard.writeText(extractedText)
+                    addToast('Text copied to clipboard!', 'success');
+                  }
+                  }
+
+                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                 >
                   Copy Text
                 </button>

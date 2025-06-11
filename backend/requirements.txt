@@ -8,3 +8,4 @@ transformers
 python-multipart
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 https://developer.nvidia.com/cuda-12-8-1-download-archive
+uvicorn app:app --host 0.0.0.0 --port 8000
