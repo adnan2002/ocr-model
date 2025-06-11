@@ -20,7 +20,7 @@ app.add_middleware(
 device = 0 if torch.cuda.is_available() else -1
 pipe = pipeline(
     "image-to-text",
-    model="microsoft/trocr-base-printed",
+    model="microsoft/trocr-large-printed",
     device=device
 )
 
