@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, ImageIcon, X, FileText } from 'lucide-react';
-
+import { post } from '@aws-amplify/api';
 const App = () => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [extractedText, setExtractedText] = useState('');
@@ -8,18 +8,8 @@ const App = () => {
   const [toasts, setToasts] = useState([]);
   const fileInputRef = useRef(null);
 
-  const allowedExtensions = ['jpg', 'jpeg', 'png', 'avif'];
-  const getApiBaseUrl = () => {
-  const hostname = window.location.hostname;
-  if (hostname === 'localhost') {
-    // We are on the host computer for development
-    return 'http://localhost:8000';
-  }
-  // We are accessing from another device on the LAN.
-  // Use the computer's IP address (which is the current hostname).
-  return `http://${hostname}:8000`;
-};
-const API_BASE_URL = getApiBaseUrl();
+  const allowedExtensions = ['jpg', 'jpeg', 'png']; // AVIF is not supported by Textract
+
   // Toast management
   const addToast = (message, type = 'error') => {
     const id = Date.now();
@@ -56,17 +46,16 @@ const API_BASE_URL = getApiBaseUrl();
     return true;
   };
 
-
-  // const handleCapital = (text)=>{
-  //   const text_arr = text.split(" ");
-  //   const result = text_arr.map((val)=>{
-  //     let temp = val.slice(1, val.length);
-  //     return val.charAt(0).toUpperCase() + temp;
-  //   })
-  //   return result.join(" ")
-  // }
+  // Function to convert file to base64
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the base64 part
+    reader.onerror = (error) => reject(error);
+  });
 
   // Process and upload image
+// Process and upload image
   const processImage = async (file) => {
     if (!validateFile(file)) return;
 
@@ -77,33 +66,39 @@ const API_BASE_URL = getApiBaseUrl();
 
       // Start loading
       setIsLoading(true);
-      addToast('Processing image...', 'loading');
+      setExtractedText(''); // Clear previous results
+      addToast('Processing image with AWS Textract...', 'loading');
 
-      // Simulate API call (replace with your actual endpoint)
-      const formData = new FormData();
-      formData.append('file', file); 
+      // Convert image to base64
+      const base64Image = await toBase64(file);
 
-      const response = await fetch(`${API_BASE_URL}/ocr`, {
-        method: 'POST',
-        body: formData,
+      // --- NEW v6 API CALL ---
+      const restOperation = post({
+        apiName: 'textractapi', // Your API name from aws-exports.js
+        path: '/ocr',
+        options: {
+          body: {
+            image: base64Image,
+          },
+        },
       });
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
+      const { body } = await restOperation.response;
+      const response = await body.json();
+      // --- END NEW v6 API CALL ---
 
-      const result = await response.json();
-      
-      if (result.text) {
-        setExtractedText(result.text);
+      if (response.text || response.text === '') { // Handle empty but successful response
+        setExtractedText(response.text);
         addToast('Text extraction completed successfully!', 'success');
+      } else if (response.error) {
+        throw new Error(response.message || response.error);
       } else {
-        throw new Error('No text found in the response');
+        throw new Error('An unknown error occurred');
       }
 
     } catch (error) {
       console.error('OCR Error:', error);
-      addToast(`Failed to extract text: ${error.message}`);
+      addToast(`Failed to extract text: ${error.message || 'Unknown error'}`);
       setExtractedText('');
     } finally {
       setIsLoading(false);
@@ -145,8 +140,7 @@ const API_BASE_URL = getApiBaseUrl();
         }
       }
     }
-
-    // If we get here, no image was found in clipboard
+    
     addToast('No image found in clipboard. Please copy an image and try again.');
   }, []);
 
@@ -187,8 +181,8 @@ const API_BASE_URL = getApiBaseUrl();
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Image OCR Tool</h1>
-          <p className="text-gray-600">Upload an image to extract text using optical character recognition</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Image OCR Tool with AWS Textract</h1>
+          <p className="text-gray-600">Upload an image to extract text using AWS Textract</p>
         </div>
 
         {/* Main Content */}
@@ -245,7 +239,7 @@ const API_BASE_URL = getApiBaseUrl();
                       You can also paste an image from your clipboard (Ctrl+V)
                     </p>
                     <p className="text-xs text-gray-400 mt-2">
-                      Supported formats: JPG, JPEG, PNG, AVIF (max 10MB)
+                      Supported formats: JPG, JPEG, PNG (max 10MB)
                     </p>
                   </div>
                 </div>
@@ -255,12 +249,12 @@ const API_BASE_URL = getApiBaseUrl();
             <input
               ref={fileInputRef}
               type="file"
-              accept=".jpg,.jpeg,.png,.avif"
+              accept=".jpg,.jpeg,.png"
               onChange={handleFileChange}
               className="hidden"
             />
 
- {/* Paste Text Field */}
+            {/* Paste Text Field */}
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Or paste image here:

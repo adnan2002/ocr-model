@@ -1,0 +1,30 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-textractapp-dev-275a2-authRole",
+      "UnauthRoleArn": "arn:aws:iam::992382450474:role/amplify-textractapp-dev-275a2-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::992382450474:role/amplify-textractapp-dev-275a2-authRole",
+      "Region": "ap-south-1",
+      "DeploymentBucketName": "amplify-textractapp-dev-275a2-deployment",
+      "UnauthRoleName": "amplify-textractapp-dev-275a2-unauthRole",
+      "StackName": "amplify-textractapp-dev-275a2",
+      "StackId": "arn:aws:cloudformation:ap-south-1:992382450474:stack/amplify-textractapp-dev-275a2/3b322fa0-48c4-11f0-a7f0-0235ee594da9",
+      "AmplifyAppId": "dmswwt8cksgk3",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-textractapp-dev-275a2-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
+    },
+    "categories": {
+      "auth": {
+        "textractappf13608ee": {}
+      },
+      "function": {
+        "textractfunction": {
+          "deploymentBucketName": "amplify-textractapp-dev-275a2-deployment",
+          "s3Key": "amplify-builds/textractfunction-614e36632f344e6a7876-build.zip"
+        }
+      },
+      "api": {
+        "textractapi": {}
+      }
+    }
+  }
+}
